@@ -214,14 +214,21 @@ struct
       let n = value_int v in
       let _ = print_endline (string_of_int n) in
       (v, mem')
-    | LETV (x, e1, e2) ->
+    | LETV (x, e1, e2) -> (*variable binding*)
       let (v, mem') = eval mem env e1 in
       let (l, mem'') = Mem.alloc mem' in
       eval (Mem.store mem'' l v) (Env.bind env x (Addr l)) e2
-    | ASSIGN (x, e) ->
+    | ASSIGN (x, e) ->  (*assign to variable*)
       let (v, mem') = eval mem env e in
       let l = lookup_env_loc env x in
       (v, Mem.store mem' l v)
+    | ADD (e1, e2) -> (*덧셈연산*)
+      let (v, mem') = eval mem env e1 in
+      let n1 = value_int v in
+      let (l, mem'') = eval mem env e2 in
+      let n2 = value_int l in
+      let _ = n1 + n2 in
+      (l, mem'')
     | _ -> failwith "Unimplemented" (* TODO : Implement rest of the cases *)
 
   let run (mem, env, pgm) = 
