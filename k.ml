@@ -205,6 +205,10 @@ struct
 
   let rec eval mem env e =
     match e with
+    | VAR x ->
+      let l = lookup_env_loc env x in
+      let v = Mem.load mem l in
+      (v, mem)
     | READ x -> 
       let v = Num (read_int()) in
       let l = lookup_env_loc env x in
@@ -222,13 +226,15 @@ struct
       let (v, mem') = eval mem env e in
       let l = lookup_env_loc env x in
       (v, Mem.store mem' l v)
-    | ADD (e1, e2) -> (*덧셈연산*)
-      let (v, mem') = eval mem env e1 in
-      let n1 = value_int v in
-      let (l, mem'') = eval mem env e2 in
-      let n2 = value_int l in
-      let _ = n1 + n2 in
-      (l, mem'')
+    | NUM value -> Num value, mem
+    | TRUE -> Bool true, mem
+    | FALSE -> Bool false, mem
+    | ADD (e1, e2) ->
+      let (v1, m') = eval mem env e1 in
+      let n1 = value_int v1 in
+      let (v2, m'') = eval mem env e2 in
+      let n2 = value_int v2 in
+      (Num(n1 + n2), m'')
     | _ -> failwith "Unimplemented" (* TODO : Implement rest of the cases *)
 
   let run (mem, env, pgm) = 
