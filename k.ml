@@ -222,6 +222,8 @@ struct
       let (v, mem') = eval mem env e1 in
       let (l, mem'') = Mem.alloc mem' in
       eval (Mem.store mem'' l v) (Env.bind env x (Addr l)) e2
+    | LETF (funid, arguList, command, e1) ->
+      eval mem (Env.bind env funid (Proc (arguList, command, env))) e1
     | ASSIGN (x, e) ->  (*assign to variable*)
       let (v, mem') = eval mem env e in
       let l = lookup_env_loc env x in
