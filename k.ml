@@ -271,7 +271,10 @@ struct
           ((Bool false), m')
       else
           ((Bool true), m')
-
+    | LESS (e1, e2) ->
+      let (n1 , m') = eval mem env e1 in
+      let (n2, m'') = eval m' env e2 in
+      ((Bool (n1 < n2)), m'')
     | _ -> failwith "Unimplemented" (* TODO : Implement rest of the cases *)
 
   let run (mem, env, pgm) = 
