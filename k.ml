@@ -245,6 +245,20 @@ struct
       let (v2, m'') = eval mem env e2 in
       let n2 = value_int v2 in
      (Num(n1 - n2), m'')
+    | MUL (e1, e2) ->
+      let (v1, m') = eval mem env e1 in
+      let n1 = value_int v1 in
+      let (v2, m'') = eval mem env e2 in
+      let n2 = value_int v2 in
+      (Num(n1 * n2), m'')
+    | DIV (e1, e2)->
+      let (v1, m') = eval mem env e1 in
+      let n1 = value_int v1 in
+      let (v2, m'') = eval mem env e2 in
+      let n2 = value_int v2 in
+      (Num(n1 / n2), m'')
+          
+
     | SEQ (e1, e2) ->
       let (v1, m') = eval mem env e1 in
       let (v2, m'') = eval m' env e2 in
