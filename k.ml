@@ -251,14 +251,27 @@ struct
      (v2, m'') 
     | CALLV (funid, expList) ->
       let (arguList, command, lenv) = lookup_env_proc env funid in
-      match expList with
+      (match expList with
       | [] -> eval mem lenv command
       | exp :: el ->
         let (v, m') = eval mem env exp in
         let (l, m'') = Mem.alloc m' in
         let lenv' = 
             Env.bind lenv (List.hd arguList) (Addr l) in
-        eval (Mem.store m'' l v) (Env.bind env funid (Proc ((List.tl arguList), command, lenv'))) (CALLV (funid, el))
+            eval (Mem.store m'' l v) (Env.bind env funid (Proc ((List.tl arguList), command, lenv'))) (CALLV (funid, el)))
+    | IF (cond, texp, fexp) ->
+      let (evcond, m') = eval mem env cond in
+      if (value_bool evcond) then
+          eval m' env texp
+      else
+          eval m' env fexp
+    | NOT cond -> 
+      let (b, m') = eval mem env cond in
+      if (value_bool b) then
+          ((Bool false), m')
+      else
+          ((Bool true), m')
+
     | _ -> failwith "Unimplemented" (* TODO : Implement rest of the cases *)
 
   let run (mem, env, pgm) = 
