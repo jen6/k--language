@@ -5,6 +5,7 @@
  *)
 
 (* Location Signature *)
+open List
 module type LOC =
 sig
   type t
@@ -246,8 +247,18 @@ struct
      (Num(n1 - n2), m'')
     | SEQ (e1, e2) ->
       let (v1, m') = eval mem env e1 in
-      let (v2, m'') = eval mem env e2 in
+      let (v2, m'') = eval m' env e2 in
      (v2, m'') 
+    | CALLV (funid, expList) ->
+      let (arguList, command, lenv) = lookup_env_proc env funid in
+      match expList with
+      | [] -> eval mem lenv command
+      | exp :: el ->
+        let (v, m') = eval mem env exp in
+        let (l, m'') = Mem.alloc m' in
+        let lenv' = 
+            Env.bind lenv (List.hd arguList) (Addr l) in
+        eval (Mem.store m'' l v) (Env.bind env funid (Proc ((List.tl arguList), command, lenv'))) (CALLV (funid, el))
     | _ -> failwith "Unimplemented" (* TODO : Implement rest of the cases *)
 
   let run (mem, env, pgm) = 
