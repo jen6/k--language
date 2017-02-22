@@ -260,17 +260,21 @@ struct
     | SEQ (e1, e2) ->
       let (v1, m') = eval mem env e1 in
       let (v2, m'') = eval m' env e2 in
-     (v2, m'') 
+     (v2, m'')
     | CALLV (funid, expList) ->
-      let (arguList, command, lenv) = lookup_env_proc env funid in
-      (match expList with
-      | [] -> eval mem lenv command
-      | exp :: el ->
-        let (v, m') = eval mem env exp in
-        let (l, m'') = Mem.alloc m' in
-        let lenv' = 
-            Env.bind lenv (List.hd arguList) (Addr l) in
-            eval (Mem.store m'' l v) (Env.bind env funid (Proc ((List.tl arguList), command, lenv'))) (CALLV (funid, el)))
+      let (arguList,command, lenv) = lookup_env_proc env funid in
+      (let rec conArgu argl expl cmem cenv =
+          (
+          match (argl, expl) with
+          | ([], []) -> eval cmem cenv command
+          | (arg :: al, exp :: el) -> 
+            let (ev,m') = eval cmem env exp in
+            let (l, m'') = Mem.alloc m' in
+            conArgu al el (Mem.store m'' l ev) (Env.bind cenv arg (Addr l))
+          ) in
+      conArgu arguList expList mem lenv
+      )
+
     | CALLR (funid, idList) ->
       let (arguList, command, lenv) = lookup_env_proc env funid in
       ( match idList with
