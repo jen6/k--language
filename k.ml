@@ -218,7 +218,7 @@ struct
       let (v, mem') = eval mem env e in
       let n = value_int v in
       let _ = print_endline (string_of_int n) in
-      (v, mem')
+      (Num n, mem')
     | LETV (x, e1, e2) -> (*variable binding*)
       let (v, mem') = eval mem env e1 in
       let (l, mem'') = Mem.alloc mem' in
@@ -257,8 +257,6 @@ struct
       let (v2, m'') = eval mem env e2 in
       let n2 = value_int v2 in
       (Num(n1 / n2), m'')
-          
-
     | SEQ (e1, e2) ->
       let (v1, m') = eval mem env e1 in
       let (v2, m'') = eval m' env e2 in
@@ -273,6 +271,15 @@ struct
         let lenv' = 
             Env.bind lenv (List.hd arguList) (Addr l) in
             eval (Mem.store m'' l v) (Env.bind env funid (Proc ((List.tl arguList), command, lenv'))) (CALLV (funid, el)))
+    | CALLR (funid, idList) ->
+      let (arguList, command, lenv) = lookup_env_proc env funid in
+      ( match idList with
+        | [] -> eval mem lenv command
+        | id :: idl ->
+          let l = lookup_env_loc env id in
+          let lenv' = Env.bind lenv (List.hd arguList) (Addr l) in
+          eval mem (Env.bind env funid (Proc ((List.tl arguList), command, lenv'))) (CALLR (funid, idl))
+      )
     | IF (cond, texp, fexp) ->
       let (evcond, m') = eval mem env cond in
       if (value_bool evcond) then
