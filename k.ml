@@ -236,25 +236,25 @@ struct
     | ADD (e1, e2) ->
       let (v1, m') = eval mem env e1 in
       let n1 = value_int v1 in
-      let (v2, m'') = eval mem env e2 in
+      let (v2, m'') = eval m' env e2 in
       let n2 = value_int v2 in
       (Num(n1 + n2), m'')
     | SUB (e1, e2) ->
       let (v1, m') = eval mem env e1 in
       let n1 = value_int v1 in
-      let (v2, m'') = eval mem env e2 in
+      let (v2, m'') = eval m' env e2 in
       let n2 = value_int v2 in
      (Num(n1 - n2), m'')
     | MUL (e1, e2) ->
       let (v1, m') = eval mem env e1 in
       let n1 = value_int v1 in
-      let (v2, m'') = eval mem env e2 in
+      let (v2, m'') = eval m' env e2 in
       let n2 = value_int v2 in
       (Num(n1 * n2), m'')
     | DIV (e1, e2)->
       let (v1, m') = eval mem env e1 in
       let n1 = value_int v1 in
-      let (v2, m'') = eval mem env e2 in
+      let (v2, m'') = eval m' env e2 in
       let n2 = value_int v2 in
       (Num(n1 / n2), m'')
     | SEQ (e1, e2) ->
@@ -274,16 +274,18 @@ struct
           ) in
       conArgu arguList expList mem lenv
       )
-
-    | CALLR (funid, idList) ->
+    |CALLR (funid, idList) ->
       let (arguList, command, lenv) = lookup_env_proc env funid in
-      ( match idList with
-        | [] -> eval mem lenv command
-        | id :: idl ->
-          let l = lookup_env_loc env id in
-          let lenv' = Env.bind lenv (List.hd arguList) (Addr l) in
-          eval mem (Env.bind env funid (Proc ((List.tl arguList), command, lenv'))) (CALLR (funid, idl))
-      )
+      (let rec conArgu argl idl cenv =
+          ( 
+          match (argl, idl) with
+          | ([], []) -> eval mem cenv command
+          | (arg :: al, id :: idl) ->
+             let l = lookup_env_loc env id in
+             conArgu al idl (Env.bind cenv arg (Addr l))
+          ) in 
+      conArgu arguList idList lenv
+      ) 
     | IF (cond, texp, fexp) ->
       let (evcond, m') = eval mem env cond in
       if (value_bool evcond) then
