@@ -266,7 +266,9 @@ struct
       (let rec conArgu argl expl cmem cenv =
           (
           match (argl, expl) with
-          | ([], []) -> eval cmem cenv command
+          | ([], []) -> 
+            let cenv' = Env.bind cenv funid (Proc (arguList, command, lenv)) in 
+            eval cmem cenv' command 
           | (arg :: al, exp :: el) -> 
             let (ev,m') = eval cmem env exp in
             let (l, m'') = Mem.alloc m' in
@@ -279,7 +281,9 @@ struct
       (let rec conArgu argl idl cenv =
           ( 
           match (argl, idl) with
-          | ([], []) -> eval mem cenv command
+          | ([], []) -> 
+            let cenv' = Env.bind cenv funid (Proc (arguList, command, lenv)) in
+            eval mem cenv' command
           | (arg :: al, id :: idl) ->
              let l = lookup_env_loc env id in
              conArgu al idl (Env.bind cenv arg (Addr l))
@@ -302,6 +306,13 @@ struct
       let (n1 , m') = eval mem env e1 in
       let (n2, m'') = eval m' env e2 in
       ((Bool (n1 < n2)), m'')
+    | EQUAL (e1, e2) ->
+      let (v1, m') = eval mem env e1 in
+      let (v2, m'') = eval m' env e2 in
+      if (v1 == v2) then
+          ((Bool true), m'')
+      else
+          ((Bool false), m'')
     | _ -> failwith "Unimplemented" (* TODO : Implement rest of the cases *)
 
   let run (mem, env, pgm) = 
